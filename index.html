@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Benzinho</title>
+  <style>
+    body {
+      margin: 0;
+      background: #0a0a2a;
+      overflow: hidden;
+      height: 100vh;
+      font-family: 'Playfair Display', serif;
+    }
+
+    .stars {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background:
+        radial-gradient(1px 1px at 10% 20%, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 25% 80%, #ccc, transparent),
+        radial-gradient(1px 1px at 40% 60%, #eee, transparent),
+        radial-gradient(1.3px 1.3px at 70% 30%, #fff, transparent),
+        radial-gradient(1px 1px at 90% 50%, #ddd, transparent);
+      background-size: 300px 300px;
+      z-index: 0;
+    }
+
+    .shooting-star {
+      position: fixed;
+      width: 2px;
+      height: 80px;
+      background: linear-gradient(to bottom, #fff, transparent);
+      opacity: 0;
+      top: -80px;
+      transform: rotate(45deg);
+      pointer-events: none;
+    }
+
+    h1 {
+      position: fixed;
+      top: 10%;
+      width: 100%;
+      text-align: center;
+      color: #fff;
+      font-size: 1.8rem;
+      line-height: 1.6;
+      z-index: 10;
+      padding: 0 20px;
+      font-family: 'Playfair Display', serif;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: #ffdddd;
+    }
+
+    .dino {
+      position: absolute;
+      bottom: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 300px;
+      height: 200px;
+    }
+
+    .body {
+      position: absolute;
+      background: radial-gradient(circle, #98c379, #7aad52);
+      width: 240px;
+      height: 130px;
+      border-radius: 50% / 40%;
+      left: 30px;
+      top: 30px;
+    }
+
+    .tail {
+      position: absolute;
+      background: #98c379;
+      width: 60px;
+      height: 20px;
+      top: 70px;
+      left: 255px;
+      transform: rotate(20deg);
+      border-radius: 10px;
+    }
+
+    .head {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background: #98c379;
+      border-radius: 50%;
+      left: -20px;
+      top: 50px;
+    }
+
+    .eye {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: black;
+      border-radius: 50%;
+      left: 20px;
+      top: 20px;
+    }
+
+    .leg {
+      position: absolute;
+      width: 20px;
+      height: 40px;
+      background: #6f994a;
+      bottom: 0;
+    }
+
+    .leg:nth-child(1) { left: 60px; }
+    .leg:nth-child(2) { left: 100px; }
+    .leg:nth-child(3) { left: 140px; }
+    .leg:nth-child(4) { left: 180px; }
+
+    .plate {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: #e67e7e;
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+      transition: transform 0.3s, filter 0.3s, box-shadow 0.3s;
+    }
+
+    .plate:hover {
+      transform: scale(1.4);
+      filter: brightness(3) saturate(1.8);
+      box-shadow: 0 0 12px 6px #ffaaaa;
+    }
+
+    .plate:nth-child(1) { left: 60px; top: 10px; }
+    .plate:nth-child(2) { left: 90px; top: 0px; }
+    .plate:nth-child(3) { left: 120px; top: 10px; }
+    .plate:nth-child(4) { left: 150px; top: 0px; }
+    .plate:nth-child(5) { left: 180px; top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="stars"></div>
+
+  <h1>
+    Se eu fosse um <em>estegossauro</em>,<br />
+    cada placa nas minhas costas<br />
+    acenderia quando <em>você sorri.</em> :)
+  </h1>
+
+  <div class="dino">
+    <div class="body"></div>
+    <div class="tail"></div>
+    <div class="head">
+      <div class="eye"></div>
+    </div>
+
+    <!-- Patinhas -->
+    <div class="leg" style="left: 60px;"></div>
+    <div class="leg" style="left: 100px;"></div>
+    <div class="leg" style="left: 140px;"></div>
+    <div class="leg" style="left: 180px;"></div>
+
+    <!-- Placas -->
+    <div class="plate" style="left: 60px;"></div>
+    <div class="plate" style="left: 90px;"></div>
+    <div class="plate" style="left: 120px;"></div>
+    <div class="plate" style="left: 150px;"></div>
+    <div class="plate" style="left: 180px;"></div>
+  </div>
+
+  <!-- Player de áudio escondido -->
+  <audio id="sound" src="musiquinha.mp3" preload="auto"></audio>
+
+  <script>
+    // Estrela cadente
+    const maxLeft = window.innerWidth;
+    const shootingDuration = 1200;
+    const intervalBetweenStars = 3500;
+    const shootingDistance = 200;
+
+    function createShootingStar() {
+      const star = document.createElement('div');
+      star.classList.add('shooting-star');
+      const startLeft = Math.random() * maxLeft;
+
+      star.style.left = `${startLeft}px`;
+      star.style.top = `-80px`;
+      star.style.opacity = '1';
+
+      document.body.appendChild(star);
+
+      let startTime = null;
+      function animate(time) {
+        if (!startTime) startTime = time;
+        const elapsed = time - startTime;
+        if (elapsed < shootingDuration) {
+          const progress = elapsed / shootingDuration;
+          const top = -80 + progress * (window.innerHeight + 80);
+          const left = startLeft - progress * shootingDistance;
+          star.style.top = `${top}px`;
+          star.style.left = `${left}px`;
+          requestAnimationFrame(animate);
+        } else {
+          star.remove();
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    function startShootingStars() {
+      createShootingStar();
+      setInterval(() => {
+        createShootingStar();
+      }, intervalBetweenStars);
+    }
+
+    startShootingStars();
+
+    // Música ao passar o mouse nas placas
+    const sound = document.getElementById("sound");
+    const plates = document.querySelectorAll(".plate");
+
+    plates.forEach(plate => {
+      plate.addEventListener("mouseenter", () => {
+        try {
+          sound.currentTime = 0;
+          sound.play();
+        } catch (e) {
+          console.log("Não foi possível tocar o som:", e);
+        }
+      });
+    });
+
+    // Desbloqueia o som com o primeiro clique
+    function desbloquearSom() {
+      sound.play().then(() => {
+        sound.pause();
+        sound.currentTime = 0;
+        document.body.removeEventListener('click', desbloquearSom);
+      }).catch(() => {});
+    }
+
+    document.body.addEventListener('click', desbloquearSom);
+  </script>
+</body>
+</html>
